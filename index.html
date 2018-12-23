@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<title>ajameti protectde area</title>
+
+	<link rel="stylesheet" type="text/css" href="./build/potree/potree.css">
+	<link rel="stylesheet" type="text/css" href="./libs/jquery-ui/jquery-ui.min.css">
+	<link rel="stylesheet" type="text/css" href="./libs/perfect-scrollbar/css/perfect-scrollbar.css">
+	<link rel="stylesheet" type="text/css" href="./libs/openlayers3/ol.css">
+	<link rel="stylesheet" type="text/css" href="./libs/spectrum/spectrum.css">
+	<link rel="stylesheet" type="text/css" href="./libs/style/style.css">
+	<link rel="stylesheet" type="text/css" href="./libs/jstree/themes/mixed/style.css">
+	<style>
+		#pin_image {
+			position: absolute;
+			right: 5px;
+			min-height: 300;
+			border-radius: 10px;
+			height: 200;
+			width: 300px;
+			border: 0px solid green !important;
+			overflow: hidden;
+			z-index: 50;
+			transition: right 1s;
+		}
+
+			#seachrbar {
+			position: absolute;	
+			border: 0px solid white !important;
+			overflow: hidden;
+			z-index: 50;
+			transition: right 1s;
+			padding: 0px 0;
+   		    border: 3px solid green;
+    		text-align:center;
+		}
+	</style>
+</head>
+
+
+<body>
+
+	<script>
+
+		window.fbAsyncInit = function () {
+			FB.init({
+				appId: '516400212174661',
+				xfbml: true,
+				version: 'v3.2'
+
+			});
+			FB.AppEvents.logPageView();
+
+
+		};
+
+		(function (d, s, id) {
+			var js, fjs = d.getElementsByTagName(s)[0];
+			if (d.getElementById(id)) { return; }
+			js = d.createElement(s); js.id = id;
+			js.src = "https://connect.facebook.net/en_US/sdk.js";
+			fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));
+	</script>
+
+
+	<script src="./libs/jquery/jquery-3.1.1.min.js"></script>
+	<script src="./libs/spectrum/spectrum.js"></script>
+	<script src="./libs/perfect-scrollbar/js/perfect-scrollbar.jquery.js"></script>
+	<script src="./libs/jquery-ui/jquery-ui.min.js"></script>
+	<script src="./libs/three.js/build/three.min.js"></script>
+	<script src="./libs/three.js/build/Projector.js"></script>
+	<script src="./libs/other/BinaryHeap.js"></script>
+	<script src="./libs/tween/tween.min.js"></script>
+	<script src="./libs/d3/d3.js"></script>
+	<script src="./libs/proj4/proj4.js"></script>
+	<script src="./libs/openlayers3/ol.js"></script>
+	<script src="./libs/i18next/i18next.js"></script>
+	<script src="./libs/jstree/jstree.js"></script>
+	<script src="./build/potree/potree.js"></script>
+	<script src="./libs/plasio/js/laslaz.js"></script>
+	<script src="./libs/other/OBJLoader.js"></script>
+	<script src="./libs/other/PLYLoader.js"></script>
+	<script src="https://code.jquery.com/jquery-2.1.0.min.js"></script>
+	<script src="../libs/Cesium/Cesium.js"></script>
+
+	<div class="potree_container" style="position: absolute; width: 100%; height: 100%; left: 0px; top: 0px; ">
+		<div id="potree_render_area"></div>
+		<!-- <div id="potree_sidebar_container" style="position:absolute; right:100; top:100"> </div> -->
+	</div>
+
+	<style>
+		input[type=text] {
+			width: 130px;
+			box-sizing: border-box;
+			border-radius: 10px;
+			font-size: 16px;
+			background-color: rgb(255, 255, 255);
+			background-image: url("resources/images/Twitter.png");
+			background-position: 10px 10px; 
+			background-repeat: no-repeat;
+			padding: 12px 20px 12px 12px;
+			margin-top: 5px;
+			-webkit-transition: width 0.4s ease-in-out;
+			transition: width 0.4s ease-in-out;
+		}
+		
+		input[type=text]:focus {
+			width: 100%;
+		}
+		</style>
+	</head>
+
+	<body>
+
+		<div id="seachrbar" , class="searchbar">
+
+			<input id="input" onkeyup="search_tree()" type="text" name="search" placeholder="Search..">
+		</div>
+
+		<div id="pin_image" , class="shcreensh">
+			<div class="fb-share-button" data-href="https://davitgoder.github.io/davitgoder.git.io/" data-layout="button_count"
+			 data-size="small" data-mobile-iframe="true"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdavitgoder.github.io%2Fdavitgoder.git.io%2F&amp;src=sdkpreparse"
+				 class="fb-xfbml-parse-ignore">გაზიარება</a></div>
+
+			<div id="current_image">
+				<img id='tree_image' src='resources/images/ee.png' alt='image' width="auto" height="200" />
+				<!-- <img id='my_image' src='resources/images/Facebook.png' alt='image' width="auto" height="40" onclick="publishOnFacebook(this) " />
+				<img id='my_image' src='resources/images/Twitter.png' alt='image' width="auto" height="40" onclick="twitt_click(this)" /> -->
+				<!-- <div id="Name" style="position: relative; width: 100%; height: 100%; left: 25px; top: -72px;"></div>
+				<div id="Date" style="position: relative; width: 100%; height: 100%; left: 220px; top: -134px;"></div> -->
+			</div>
+		</div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+
+		<script>
+
+			function get_url() {
+				var url_string = document.URL;
+				var tree_ides = url_string.split("/");
+				var tree_id = tree_ides[tree_ides.length - 1];
+			}
+
+		</script>
+
+		<script>
+
+
+			this.readJSON("build/data.json");// initilze trees
+
+			var json_string;
+
+			function Example() {
+				console.log("Example called");
+			}
+			function search_tree() {
+
+				var input;
+				input = document.getElementById('input');
+
+				let search_word = input.value;
+
+				for (let i = 0; i < pin_objects.length; i++) { // todo: dictionary 
+					if (search_word == "test") {
+
+						this.go_to_tree(pin_objects[i]);
+
+						return;
+					}
+				}
+
+				console.log(input.value);
+			}
+
+			function readJSON(path) {
+				var xhr = new XMLHttpRequest();
+				xhr.open('GET', path, true);
+				xhr.responseType = 'blob';
+				xhr.onload = function (e) {
+					if (this.status == 200) {
+						var file = new File([this.response], 'temp');
+						var fileReader = new FileReader();
+						fileReader.addEventListener('load', function () {
+							json_string = JSON.parse(fileReader.result);
+							console.log("json was loaded: ", json_string);
+							load_stuf();
+						});
+						fileReader.readAsText(file);
+					}
+				}
+				xhr.send();
+			}
+
+
+			function go_to_tree(tree_obj) {// _goder
+
+				//this.screenshot();
+
+				let final_postion = tree_obj.mesh_obj.position;
+				pin_image.style.right = "-302px";
+				pin_image.style.right = "0px";
+				let person_name = document.getElementById("Name");
+				let plant_date = document.getElementById("Date");
+				//	person_name.innerHTML = tree_obj.person_name;
+				//	plant_date.innerHTML = tree_obj.plant_date;
+
+
+
+				var v_pos = viewer.scene.view.position;
+				var postion_diff = new THREE.Vector3(Math.abs(final_postion["x"] - v_pos.x),
+					Math.abs(final_postion["y"] - v_pos.y), Math.abs(final_postion["z"] - v_pos.z));
+
+				var magnitude = Math.sqrt(postion_diff.x * postion_diff.x +
+					postion_diff.y * postion_diff.y + postion_diff.z * postion_diff.z);
+				var multipler = 70;
+				var zoom_positon = new THREE.Vector3(
+					final_postion["x"] + postion_diff.x / magnitude * multipler,
+					final_postion["y"] + postion_diff.y / magnitude * multipler,
+					final_postion["z"] + postion_diff.z / magnitude * multipler);
+				viewer.scene.view.position = zoom_positon;
+
+
+
+				console.log(viewer.scene.cameraO);
+
+				//viewer.scene.cameraP.lookAt(zoom_positon);
+				//				viewer.scene.view.lookAt(.position);
+
+			}
+
+			var image_url;
+
+			function screenshot() { // take shortcut
+				html2canvas(document.querySelector("#pin_image"), {
+					onrendered: function (canvas) {
+						let pngUrl = canvas.toDataURL();
+						let img = document.querySelector(".shcreensh");
+						img.src = pngUrl;
+						image_url = pngUrl;
+						let image = convertURIToImageData(pngUrl);
+						document.getElementById("tree_image").src = pngUrl;
+					},
+				});
+				return image_url;
+			}
+
+			function dataURItoBlob(dataURI) {
+				var byteString = atob(dataURI.split(',')[1]);
+				var ab = new ArrayBuffer(byteString.length);
+				var ia = new Uint8Array(ab);
+				for (var i = 0; i < byteString.length; i++) {
+					ia[i] = byteString.charCodeAt(i);
+				}
+				return new Blob([ab], { type: 'image/png' });
+			}
+
+			pin_image.style.right = "-302px";
+
+
+			function convertURIToImageData(URI) {
+				return new Promise(function (resolve, reject) {
+					if (URI == null) return reject();
+					var canvas = document.createElement('canvas'),
+						context = canvas.getContext('2d'),
+						image = new Image();
+					image.addEventListener('load', function () {
+						canvas.width = image.width;
+						canvas.height = image.height;
+						context.drawImage(image, 0, 0, canvas.width, canvas.height);
+						resolve(context.getImageData(0, 0, canvas.width, canvas.height));
+					}, false);
+					image.src = URI;
+				});
+			}
+
+
+			function twitt_click(TheImg) {
+				u = TheImg.src;
+				// t=document.title;
+				t = TheImg.getAttribute('alt');
+				window.open('https://twitter.com/share?url=' + document.URL, 'twitter-popup', 'height=350,width=600'); return false;
+			}
+
+			//let pin_image = document.getElementById("pin_image");
+
+			window.viewer = new Potree.Viewer(document.getElementById("potree_render_area"));
+
+			viewer.setEDLEnabled(true);
+			viewer.setFOV(60);
+			viewer.setPointBudget(1 * 1000 * 1000);
+			viewer.loadSettingsFromURL();
+
+			// viewer.setEDLEnabled(false);
+			// viewer.setFOV(60);
+			// viewer.setPointBudget(1 * 100000);
+			// viewer.loadSettingsFromURL();
+
+			viewer.setDescription(" <a target='_blank' href='https://www.facebook.com/people/Tree-Bex/100013519271137'>Developed by TreePex</a>");
+
+			// menue_block
+			viewer.loadGUI(() => {
+				viewer.setLanguage('en');
+				$("#menu_tools").next().show();
+				$("#menu_scene").next().show();
+				viewer.toggleSidebar();
+			});
+
+			// Sigeom Poin Cloud
+			Potree.loadPointCloud("./pointclouds/vol_total/cloud.js", "sigeom.sa", function (e) {
+				let scene = viewer.scene;
+				scene.addPointCloud(e.pointcloud);
+
+				let material = e.pointcloud.material;
+				material.size = 1;
+				material.pointSizeType = Potree.PointSizeType.ADAPTIVE;
+
+				scene.view.position.set(589974.341, 231698.397, 986.146);
+				scene.view.lookAt(new THREE.Vector3(589851.587, 231428.213, 615.634));
+				viewer.fitToScreen();
+			});
+
+
+			// { // ANNOTATIONS
+
+			let scene = viewer.scene;
+
+
+
+			// scene.annotations.add(new Potree.Annotation({
+			// 	position: [589808.587, 231525.213, 771.334],
+			// 	title: "Pasha Bank",
+			// 	description: `
+			// 		<img src="./resources/images/tree.png" class="pasha-bank-tree"/>
+			// 		`
+			// }));
+
+
+			// scene.annotations.add(new Potree.Annotation({
+			// 	position: [590041.587, 231525.213, 755.334],
+			// 	title: "Good Green Moving",
+			// 	description: `
+			// 		<img src="./resources/images/ee.jpg" class="pasha-bank-tree"/>
+			// 		`
+			// }));
+
+			// scene.annotations.add(new Potree.Annotation({
+			// 	position: [589930.587, 231525.213, 755.334],
+			// 	title: "pasha bank",
+			// 	description: `
+			// 		<img src="./resources/images/tree.png" class="pasha-bank-tree"/>
+			// 		`
+			// }));
+
+			// scene.annotations.add(new Potree.Annotation({
+			// 	position: [589697.587, 231525.213, 779.334],
+			// 	title: "Good Green Moving",
+			// 	description: `
+			// 		<img src="./resources/images/ee2.png" class="pasha-bank-tree"/>
+			// 		`
+			// }));
+
+			var pin_objects = [];
+
+			class pin_object {
+				constructor(object_id, person_name, plant_date, person_email, pin_picture, mesh_obj) {
+					this.object_id = object_id;
+					this.person_name = person_name;
+					this.plant_date = plant_date;
+					this.person_email = person_email;
+					this.pin_picture = pin_picture;
+					this.mesh_obj = mesh_obj;
+
+				}
+
+			}
+
+
+			function load_stuf() {
+				let manager = new THREE.LoadingManager();
+				let textureLoader = new THREE.TextureLoader(manager);
+				manager.onProgress = function (item, loaded, total) {
+					console.log(item, loaded, total);
+				};
+
+
+				//let plane_texture = textureLoader.load('./resources/textures/PamTexture1.png');
+				let soil_texture = textureLoader.load('./resources/textures/soil5.png');
+
+				let pin_texture = textureLoader.load('./resources/textures/pintexture.png');
+
+				let onProgress = function (xhr) {
+					if (xhr.lengthComputable) {
+						let percentComplete = xhr.loaded / xhr.total * 100;
+						console.log(Math.round(percentComplete, 2) + '% downloaded');
+					}
+				};
+				//plane_texture.wrapS = THREE.RepeatWrapping;
+				//plane_texture.wrapT = THREE.RepeatWrapping;
+
+
+				soil_texture.wrapS = THREE.RepeatWrapping;
+				soil_texture.wrapT = THREE.RepeatWrapping;
+
+				pin_texture.wrapS = THREE.RepeatWrapping;
+				pin_texture.wrapT = THREE.RepeatWrapping;
+
+
+
+				let onError = function (xhr) { };
+				let loader = new THREE.OBJLoader(manager);
+
+
+				loader.load('./resources/models/soil.obj', function (soil_model) {
+					soil_model.traverse(function (child) {
+						if (child instanceof THREE.Mesh) {
+							child.material.map = soil_texture;
+						}
+					});
+
+
+					soil_model.position.set(
+						589742.5396259155, 231513.74975000002, 723.1750000762939
+					);
+
+
+					soil_model.scale.multiplyScalar(200);
+					soil_model.rotation.set(Math.PI / 2, Math.PI, 0)
+					viewer.scene.scene.add(soil_model);
+				});
+
+
+
+
+				loader.load('./resources/models/newpin.obj', function (loaded_mesh) {
+					loaded_mesh.traverse(function (child) {
+						if (child instanceof THREE.Mesh) {
+							child.material.map = pin_texture;
+						}
+					});
+
+
+
+					for (let i = 0; i < json_string.length; i++) {
+
+
+						let obj = loaded_mesh.clone(true);
+
+
+						obj.children[0].name = json_string[i].object_id;
+
+
+						var pin = new pin_object(json_string[i].object_id, json_string[i].person_name,
+							json_string[i].plant_date, json_string[i].person_email, json_string[i].pin_picture,
+							obj);
+
+						obj.position.set(
+							json_string[i].obj_pos[0],
+							json_string[i].obj_pos[1],
+							json_string[i].obj_pos[2]
+						);
+
+						pin_objects.push(pin);
+						obj.scale.multiplyScalar(1);
+						obj.rotation.set(Math.PI / 2, Math.PI, 0)
+						viewer.scene.scene.add(obj);
+					}
+
+
+
+					
+				}, onProgress, onError);
+
+
+			
+
+				draw();
+
+				function draw() {
+
+					var canvas = document.getElementById('idCanvas');
+					var context = canvas.getContext('2d');
+
+					var imageObj = new Image();
+
+
+					imageObj.onload = function () {
+						context.drawImage(imageObj, 0, 0);
+						context.font = "40px Calibri";
+						context.fillStyle = "red";
+						context.fillText("My TEXT!", 50, 300);
+
+						var canvas = document.getElementById('idCanvas');
+						var dataURL = canvas.toDataURL();
+
+						alert(dataURL);
+					}
+					imageObj.setAttribute('crossOrigin', 'anonymous');
+					imageObj.src = "http://lorempixel.com/400/200/";
+				};
+
+
+				//TODO: optimize instanciating
+				function object_loader(position) {
+					loader.load('./resources/models/XE.obj', function (object) {
+						object.traverse(function (child) {
+							if (child instanceof THREE.Mesh) {
+								child.material.map = texture;
+							}
+						});
+						object.position.set(position[0], position[1], position[2]);
+						object.scale.multiplyScalar(500);
+						object.rotation.set(Math.PI / 2, Math.PI, 0)
+
+						viewer.scene.scene.add(object);
+
+
+					}, onProgress, onError);
+
+
+				}
+
+			}
+
+		</script>
+
+
+	</body>
+
+</html>
